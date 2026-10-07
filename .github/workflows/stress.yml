@@ -1,6 +1,8 @@
 name: Stress and Benchmarks
 on:
   workflow_dispatch:
+  push:
+    branches: [feat/core-v0.1]
   schedule:
     - cron: "17 2 * * 1"
 permissions:
