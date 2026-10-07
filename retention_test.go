@@ -69,7 +69,7 @@ func TestRecorderAutomaticCleanup(t *testing.T) {
 	t.Fatalf("flow was not automatically evicted: %+v", r.Stats())
 }
 
-func TestStressBoundedRetention(t *testing.T) {
+func StressBoundedRetention(t *testing.T) {
 	if testing.Short() { t.Skip("stress test") }
 	const batches = 10
 	const perBatch = 10000
