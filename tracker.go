@@ -23,6 +23,7 @@ type Tracker struct {
 	flows   map[string]*Flow
 	seq     uint64
 	seen    map[string]seenEntry
+	flowFingerprints map[string]map[string]struct{}
 	options TrackerOptions
 }
 
@@ -33,7 +34,7 @@ type seenEntry struct {
 func NewTracker() *Tracker { return NewTrackerWithOptions(TrackerOptions{}) }
 
 func NewTrackerWithOptions(options TrackerOptions) *Tracker {
-	return &Tracker{flows: map[string]*Flow{}, seen: map[string]seenEntry{}, options: options}
+	return &Tracker{flows: map[string]*Flow{}, seen: map[string]seenEntry{}, flowFingerprints: map[string]map[string]struct{}{}, options: options}
 }
 
 func (t *Tracker) Apply(e Event) (Flow, bool) {
@@ -64,6 +65,10 @@ func (t *Tracker) Apply(e Event) (Flow, bool) {
 		f.Retransmissions++
 	} else {
 		t.seen[fp] = seenEntry{flowID: id}
+		if t.flowFingerprints[id] == nil {
+			t.flowFingerprints[id] = map[string]struct{}{}
+		}
+		t.flowFingerprints[id][fp] = struct{}{}
 	}
 
 	method := e.CSeqMethod
@@ -144,11 +149,10 @@ func (t *Tracker) Cleanup(now time.Time) int {
 			continue
 		}
 		delete(t.flows, id)
-		for fp, entry := range t.seen {
-			if entry.flowID == id {
-				delete(t.seen, fp)
-			}
+		for fp := range t.flowFingerprints[id] {
+			delete(t.seen, fp)
 		}
+		delete(t.flowFingerprints, id)
 		removed++
 	}
 	return removed
